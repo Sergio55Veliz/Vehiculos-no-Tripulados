@@ -5,7 +5,7 @@ from enum import Enum, auto
 
 import numpy as np
 
-from planning_utils import a_star, heuristic, create_grid,prune_path
+from planning_utils import a_star, heuristic, create_grid, prune_path
 from udacidrone import Drone
 from udacidrone.connection import MavlinkConnection
 from udacidrone.messaging import MsgID
@@ -52,6 +52,7 @@ class MotionPlanning(Drone):
                     if np.linalg.norm(self.local_velocity[0:2]) < 1.0:
                         self.landing_transition()
 
+    # Cuando está cerca del home en un radio de 0.1 se desarma
     def velocity_callback(self):
         if self.flight_state == States.LANDING:
             if self.global_position[2] - self.global_home[2] < 0.1:
@@ -80,14 +81,16 @@ class MotionPlanning(Drone):
     def takeoff_transition(self):
         self.flight_state = States.TAKEOFF
         print("takeoff transition")
-        self.takeoff(self.target_position[2])
+        self.takeoff(self.target_position[2])  # Despega a la altura deseada
+        # Altitud setteada en plan_path() ↓↓↓
 
     def waypoint_transition(self):
         self.flight_state = States.WAYPOINT
         print("waypoint transition")
         self.target_position = self.waypoints.pop(0)
         print('target position', self.target_position)
-        self.cmd_position(self.target_position[0], self.target_position[1], self.target_position[2], self.target_position[3])
+        self.cmd_position(self.target_position[0], self.target_position[1], self.target_position[2],
+                          self.target_position[3])
 
     def landing_transition(self):
         self.flight_state = States.LANDING
@@ -114,7 +117,7 @@ class MotionPlanning(Drone):
     def plan_path(self):
         self.flight_state = States.PLANNING
         print("Searching for a path ...")
-        TARGET_ALTITUDE = 5
+        TARGET_ALTITUDE = 5  # Altitud de despegue
         SAFETY_DISTANCE = 5
 
         self.target_position[2] = TARGET_ALTITUDE
@@ -123,32 +126,34 @@ class MotionPlanning(Drone):
         with open('colliders.csv') as f:
             first_line = f.readline().strip()
         latlon = first_line.split(',')
-        lon0 = float(latlon[0].strip().split(' ')[1])
-        lat0 = float(latlon[1].strip().split(' ')[1])
-        
+        lon0 = float(latlon[0].strip().split(' ')[1])  # Longitud del centro
+        lat0 = float(latlon[1].strip().split(' ')[1])  # Latitud del centro
+
         # TODO: set home position to (lon0, lat0, 0)
-        global_home = (lon0, lat0, 0)
         self.set_home_position(lat0, lon0, 0)
         # TODO: retrieve current global position
         global_position = (self._longitude, self._latitude, self._altitude)
         # TODO: convert to current local position using global_to_local()
         local_pos = global_to_local(self.global_position,
                                     global_home=self.global_home)
-        #north, east, att = local_pos
+        north, east, att = local_pos
         print('global home {0}, position {1}, local position {2}'.format(self.global_home, self.global_position,
                                                                          self.local_position))
         # Read in obstacle map
         data = np.loadtxt('colliders.csv', delimiter=',', dtype='Float64', skiprows=2)
-        
+
         # Define a grid for a particular altitude and safety margin around obstacles
         grid, north_offset, east_offset = create_grid(data, TARGET_ALTITUDE, SAFETY_DISTANCE)
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
         # Define starting point on the grid (this is just grid center)
         grid_start = (-north_offset, -east_offset)
         # TODO: convert start position to current position rather than map center
-        
+        self.set_home_as_current_position()
+
         # Set goal as some arbitrary position on the grid
-        grid_goal = (-north_offset + 50, -east_offset + 20)
+        grid_goal = self.getGoal_local_position(grid, north_offset, east_offset)
+        print('Grid Start and Goal: ', grid_start, grid_goal)
+
         # TODO: adapt to set goal as latitude / longitude position and convert
 
         # Run A* to find a path from start to goal
@@ -160,11 +165,91 @@ class MotionPlanning(Drone):
         # TODO (if you're feeling ambitious): Try a different approach altogether!
         pruned_path = prune_path(path)
         # Convert path to waypoints
-        waypoints = [[p[0] + north_offset, p[1] + east_offset, TARGET_ALTITUDE, 0] for p in pruned_path]
+        waypoints = [[p[0] + north_offset, p[1] + east_offset,
+                      TARGET_ALTITUDE,
+                      0] for p in pruned_path]
         # Set self.waypoints
         self.waypoints = waypoints
         # TODO: send waypoints to sim (this is just for visualization of waypoints)
         self.send_waypoints()
+
+    def getGoal_local_position(self, grid, north_offset, east_offset):
+        """
+        Retorna una tupla con las coordenadas Locales de la meta
+
+        -> return (coordenada norte, coordenada este, cordenada abajo)
+        """
+        grid_shape = grid.shape  # Dimensiones del mapa (alto, ancho)
+        print("Dimension del mapa -> ", grid_shape)
+        north_coordenate = None
+        east_coordenate = None
+        grid_goal = None
+        # randomly select a goal
+        dist_idx = 100.0  # Trata de garantizar que el goal generado no este fuera del mapa con una división
+        goal_obs = True
+        while goal_obs:  # mientras la meta sea un obstáculo se crean otras coordenadas
+            # aquí estamos ignorando la generacion de la coordenada DOWN
+
+            # GENERO la coordenada NORTE que esté dentro del mapa
+            condition_north = True
+            while condition_north:
+                ng = self.generate_random_localPosition(north=True)
+                north_coordenate = int(np.rint(ng - north_offset))
+                # Verifica que esté dentro del mapa
+                condition_north = north_coordenate < 1 or north_coordenate > grid_shape[0] - 2
+                # north_coordenate < 1 en caso que sea menor al offset
+                # north_coordenate > grid_shape[0] - 2 en caso de que sea mayor al valor máximo
+                # Esto considera que si está en el límite se calcula una nueva coordenada
+
+            # GENERO la coordenada ESTE que esté dentro del mapa
+            condition_east = True
+            while condition_east:
+                eg = self.generate_random_localPosition(east=True)
+                east_coordenate = int(np.rint(eg - east_offset))
+                # Verifica que esté dentro del mapa
+                condition_east = east_coordenate < 1 or east_coordenate > grid_shape[1] - 2
+                # east_coordenate < 1 en caso que sea menor al offset
+                # east_coordenate > grid_shape[1] - 2 en caso de que sea mayor al valor máximo
+                # Esto considera que si está en el límite se calcula una nueva coordenada
+
+            grid_goal = (north_coordenate, east_coordenate)  # Tupla con Coordenadas de la meta
+
+            # Verifica si la meta calculada es un obstáculo
+            goal_obs = grid[grid_goal[0], grid_goal[1]]  # La meta es un obstáculo?? (True->NO, False->SI)
+            print(grid_goal, " Es un obstáculo?-> ", goal_obs)
+        print(grid_goal)
+        return grid_goal
+
+    def generate_random_localPosition(self, north=False, east=False, down=False):
+        """
+        Esta funcion retorna un calculo de la coordenada especificada de la meta
+
+        Solo se debe de seleccionar una de las coordenadas asignandole el valor de True
+        en el argumento
+        """
+        index = None
+        if north:
+            index = 0
+            print("\nCalculating north coordenate")
+        elif east:
+            index = 1
+            print("\nCalculating east coordenate")
+        elif down:
+            index = 2
+            print("\nCalculating down coordenate")
+
+        reductor = 100.0  # Trata de garantizar que el goal generado no este fuera del mapa con una división
+        change = np.random.rand(1)
+        change -= 0.5  # Es lo que permite que podamos ir a un norte o este positivo o negativo
+        print("\tchange:", change)
+        goal = (self.global_home[0] + change[0] / reductor,  # Longitud →
+                self.global_home[1] + change[0] / reductor,  # Latitud  ↑
+                self.global_home[2] + change[0] * 10.0)  # arriba (no se usa)
+
+        local_goal = global_to_local(goal, global_home=self.global_home)  # array[north_coord, east_coord, down_coord]
+        # recordar global_to_local retorna --> down_coord = local_goal[2]= (-1)*goal[2]
+        print("\tGoal Local calculates: ", local_goal[index])
+        return local_goal[index]
 
     def start(self):
         self.start_log("Logs", "NavLog.txt")
@@ -185,7 +270,7 @@ if __name__ == "__main__":
     parser.add_argument('--host', type=str, default='127.0.0.1', help="host address, i.e. '127.0.0.1'")
     args = parser.parse_args()
 
-    conn = MavlinkConnection('tcp:{0}:{1}'.format(args.host, args.port), timeout=60)
+    conn = MavlinkConnection('tcp:{0}:{1}'.format(args.host, args.port), timeout=60*5)
     drone = MotionPlanning(conn)
     time.sleep(1)
 
