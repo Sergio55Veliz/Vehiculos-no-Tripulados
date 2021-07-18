@@ -89,6 +89,9 @@ Put all of these together and make up your own crazy paths to fly! Can you fly a
 ![Double Helix](./misc/double_helix.gif)
 
 Ok flying a double helix might seem like a silly idea, but imagine you are an autonomous first responder vehicle. You need to first fly to a particular building or location, then fly a reconnaissance pattern to survey the scene! Give it a try!
+
+### ------------- Comentarios del Código -------------
+
 ### Diferencias entre motion_planning y backyard_flyer
 En ambos archivos se puede observar una estructura casi identica , menos por una funcion , la cual calcula la lista de waypoints optima para llegar de un punto a otro en el mapa , el backyard_flyer solo podia generar un cuadro que previamente le otorgamos nosotros , en cambio el motion_planning nos entrega los waypoints dado un punto de inicio y un punto final , calcula el camino mas corto y nos devuelve una ruta optima.
 ### Archivo1: [motion_planning.py](https://github.com/Sergio55Veliz/Vehiculos-no-Tripulados/blob/main/motion_planning.py)
