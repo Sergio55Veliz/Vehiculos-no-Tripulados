@@ -92,7 +92,16 @@ Ok flying a double helix might seem like a silly idea, but imagine you are an au
 ### Diferencias entre motion_planning y backyard_flyer
 En ambos archivos se puede observar una estructura casi identica , menos por una funcion , la cual calcula la lista de waypoints optima para llegar de un punto a otro en el mapa , el backyard_flyer solo podia generar un cuadro que previamente le otorgamos nosotros , en cambio el motion_planning nos entrega los waypoints dado un punto de inicio y un punto final , calcula el camino mas corto y nos devuelve una ruta optima.
 ### Archivo1: [motion_planning.py](https://github.com/Sergio55Veliz/Vehiculos-no-Tripulados/blob/main/motion_planning.py)
-En el archivo motion_planning.py vamos a editar la funcion plan path , en esta parte empearemos leyendo el archivo `colliders.csv` para encontrar `lon0` `lat0` , para despues setearlas como home position, luego recuperaremos la posicion global con los atributos de la clase `Drone` (`self._longitude`, `self._latitude`, `self._altitude`), luego con la función `create_grid()` vamos a crear nuestro espacio de trabajo ademas de obtener el grid inicial del drone , luego con la funcion `getGoal_local_position()` definiremos un punto aleatorio y libre de obstaculos para que el drone llegue a ese grid destino, ahora vamos a generar el camino con el algoritmo A* , después de esto simplificamos el camino con el algoritmo de colinealidad para eliminar los puntos inecesarios de nuestra lista de waypoints (estos algoritmos los encontramos en el archivo [planning_utils.py](https://github.com/Sergio55Veliz/Vehiculos-no-Tripulados/blob/main/planning_utils.py)). Por ultimo enviamos nuestra listra filtrada a los atributos del drone y al simulador para que este los muestre y sea mas facil visualizar lo que esta pasando.
+En el archivo motion_planning.py vamos a editar la funcion plan path , en esta parte empearemos leyendo el archivo `colliders.csv` para encontrar `lon0` `lat0` , para despues setearlas como home position, luego recuperaremos la posicion global con los atributos de la clase `Drone` (`self._longitude`, `self._latitude`, `self._altitude`), luego con la función `create_grid()` vamos a crear nuestro espacio de trabajo ademas de obtener el grid inicial del drone.
+
+Este script tiene la funcion de que cada vez que se ejecuta puede despejar desde la posición actual, y no una posición ya pre-establecida, esto es gracias a una funcion de la clase `Drone`, la cual es `set_home_as_current_position()`. Recordar que hay que ejecutarla con el prefijo `self`...
+```python
+self.set_home_as_current_position()
+```
+
+Con la funcion `getGoal_local_position()` definiremos un punto aleatorio y libre de obstaculos para que el drone llegue a ese grid destino. 
+
+Ahora, para generar el camino utilizamos el algoritmo A* , después de esto simplificamos el camino con el algoritmo de colinealidad para eliminar los puntos inecesarios de nuestra lista de waypoints (estos algoritmos los encontramos en el archivo [planning_utils.py](https://github.com/Sergio55Veliz/Vehiculos-no-Tripulados/blob/main/planning_utils.py)). Por ultimo enviamos nuestra listra filtrada a los atributos del drone y al simulador para que este los muestre y sea mas facil visualizar lo que esta pasando.
 
 
 ### Archivo2: [planning_utils.py](https://github.com/Sergio55Veliz/Vehiculos-no-Tripulados/blob/main/planning_utils.py)
