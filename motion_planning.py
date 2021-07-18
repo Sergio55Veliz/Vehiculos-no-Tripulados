@@ -136,7 +136,7 @@ class MotionPlanning(Drone):
         # TODO: convert to current local position using global_to_local()
         local_pos = global_to_local(self.global_position,
                                     global_home=self.global_home)
-        north, east, att = local_pos
+        #north, east, att = local_pos
         print('global home {0}, position {1}, local position {2}'.format(self.global_home, self.global_position,
                                                                          self.local_position))
         # Read in obstacle map
@@ -147,6 +147,8 @@ class MotionPlanning(Drone):
         print("North offset = {0}, east offset = {1}".format(north_offset, east_offset))
         # Define starting point on the grid (this is just grid center)
         grid_start = (-north_offset, -east_offset)
+        print("north offset: ",north_offset,"\teast offset: ",east_offset)
+        print("Grid Start -> ",grid_start)
         # TODO: convert start position to current position rather than map center
         self.set_home_as_current_position()
 
@@ -186,10 +188,11 @@ class MotionPlanning(Drone):
         grid_goal = None
         # randomly select a goal
         dist_idx = 100.0  # Trata de garantizar que el goal generado no este fuera del mapa con una división
-        goal_obs = True
-        while goal_obs:  # mientras la meta sea un obstáculo se crean otras coordenadas
+        goalCondition = True
+        while goalCondition:  # mientras la meta sea un obstáculo se crean otras coordenadas
             # aquí estamos ignorando la generacion de la coordenada DOWN
-
+            ng=None
+            eg=None
             # GENERO la coordenada NORTE que esté dentro del mapa
             condition_north = True
             while condition_north:
@@ -212,11 +215,21 @@ class MotionPlanning(Drone):
                 # east_coordenate > grid_shape[1] - 2 en caso de que sea mayor al valor máximo
                 # Esto considera que si está en el límite se calcula una nueva coordenada
 
+
             grid_goal = (north_coordenate, east_coordenate)  # Tupla con Coordenadas de la meta
 
             # Verifica si la meta calculada es un obstáculo
-            goal_obs = grid[grid_goal[0], grid_goal[1]]  # La meta es un obstáculo?? (True->NO, False->SI)
-            print(grid_goal, " Es un obstáculo?-> ", goal_obs)
+            obstacule_condition = grid[grid_goal[0], grid_goal[1]]  # La meta es un obstáculo?? (True->NO, False->SI)
+            print(grid_goal, " Es un obstáculo?-> ", obstacule_condition)
+
+            distance_x=np.absolute(eg)
+            distance_y=np.absolute(ng)
+            distance=np.sqrt(distance_x**2 + distance_y**2)
+            condition_distance = distance>=100 or distance<10 #siempre que este en ese rango, se generará otro punto
+            print("\nDistancia:",distance, " , es valido?->", condition_distance)
+
+            goalCondition = obstacule_condition or condition_distance
+            print(grid_goal,"\tGenerar otro punto? -> ", goalCondition)
         print(grid_goal)
         return grid_goal
 
@@ -238,7 +251,7 @@ class MotionPlanning(Drone):
             index = 2
             print("\nCalculating down coordenate")
 
-        reductor = 100.0  # Trata de garantizar que el goal generado no este fuera del mapa con una división
+        reductor = 500.0  # Trata de garantizar que el goal generado no este fuera del mapa con una división
         change = np.random.rand(1)
         change -= 0.5  # Es lo que permite que podamos ir a un norte o este positivo o negativo
         print("\tchange:", change)
