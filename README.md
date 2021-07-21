@@ -147,8 +147,8 @@ if next_node not in visited:  # Evita que retrocedamos o andemos en círculos
             i += 1
     return pruned_path 
 ```
-Para este punto vamos a usar el algoritmo de colinearidad para de esta forma eliminar los puntos intermedios que son inecesarios recorrer , primero validaremos que cada tres puntos no sean colineales con un marger de error epsilon, luego si los tres puntos so colineales se elimina el de enmedio P2. 
-Usaremos esta funcion para agregarla a prune_path(actual_path) y de esta forma analizar el waypoint y eliminar los puntos inecesarios y de esta forma devolver el waypoint optimizado.
+Para este punto vamos a usar el algoritmo de colinearidad para de esta forma eliminar los puntos intermedios que son inecesarios recorrer, primero validaremos que cada tres puntos no sean colineales con un marger de error epsilon, luego si los tres puntos so colineales se elimina el punto de en medio P2. 
+Usaremos esta funcion para agregarla a `prune_path(actual_path)` y de esta forma analizar el waypoint y eliminar los puntos inecesarios y de esta forma devolver el waypoint optimizado.
 
 
 ## Execute the flight
