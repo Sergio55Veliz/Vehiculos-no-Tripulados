@@ -113,6 +113,7 @@ def a_star(grid, h, start, goal):
         item = queue.get()
         current_cost = item[0]
         current_node = item[1]
+        visited.add(current_node)
         if current_node == start:
             current_cost = 0.0
         else:

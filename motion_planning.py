@@ -117,7 +117,7 @@ class MotionPlanning(Drone):
     def plan_path(self):
         self.flight_state = States.PLANNING
         print("Searching for a path ...")
-        TARGET_ALTITUDE = 5  # Altitud de despegue
+        TARGET_ALTITUDE = 10  # Altitud de despegue
         SAFETY_DISTANCE = 5
 
         self.target_position[2] = TARGET_ALTITUDE
@@ -166,7 +166,7 @@ class MotionPlanning(Drone):
 
         # Run A* to find a path from start to goal
         print('Local Start and Goal: ', grid_start, grid_goal)
-        path, _ = a_star(grid, heuristic, grid_start, grid_goal)
+        path, cost = a_star(grid, heuristic, grid_start, grid_goal)
         # TODO: add diagonal motions with a cost of sqrt(2) to your A* implementation
         # or move to a different search space such as a graph (not done here)
 
