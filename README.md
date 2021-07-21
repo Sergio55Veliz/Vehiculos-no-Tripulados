@@ -121,8 +121,7 @@ if next_node not in visited:  # Evita que retrocedamos o andemos en círculos
 ```
 
 ### 6. Cull waypoints 
-
-def point(p):
+```def point(p):
     return np.array([p[0], p[1], 1.]).reshape(1, -1)
 
 
@@ -145,7 +144,7 @@ def prune_path(actual_path):
             pruned_path.remove(pruned_path[i + 1])
         else:
             i += 1
-    return pruned_path
+    return pruned_path ```
 Para este punto vamos a usar el algoritmo de colinearidad para de esta forma eliminar los puntos intermedios que son inecesarios recorrer , primero validaremos que cada tres puntos no sean colineales con un marger de error epsilon, luego si los tres puntos so colineales se elimina el de enmedio P2. 
 Usaremos esta funcion para agregarla a prune_path(actual_path) y de esta forma analizar el waypoint y eliminar los puntos inecesarios y de esta forma devolver el waypoint optimizado.
 
