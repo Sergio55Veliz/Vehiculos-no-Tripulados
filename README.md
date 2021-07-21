@@ -18,19 +18,6 @@
 ### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
 
 ---
-### Writeup / README
-
-#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  
-
-You're reading it! Below I describe how I addressed each rubric point and where in my code each point is handled.
-
-Here's | A | Snappy | Table
---- | --- | --- | ---
-1 | `highlight` | **bold** | 7.41
-2 | a | b | c
-3 | *italic* | text | 403
-4 | 2 | 3 | abcd
-
 ## Explaination of the Starter Code
 
 ### 1. Functionality of what's provided in `motion_planning.py` and `planning_utils.py`
