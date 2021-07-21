@@ -121,7 +121,8 @@ if next_node not in visited:  # Evita que retrocedamos o andemos en círculos
 ```
 
 ### 6. Cull waypoints 
-```def point(p):
+```
+    def point(p):
     return np.array([p[0], p[1], 1.]).reshape(1, -1)
 
 
