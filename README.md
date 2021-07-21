@@ -121,8 +121,33 @@ if next_node not in visited:  # Evita que retrocedamos o andemos en círculos
 ```
 
 ### 6. Cull waypoints 
-For this step you can use a collinearity test or ray tracing method like Bresenham. The idea is simply to prune your path of unnecessary waypoints. Explain the code you used to accomplish this step.
 
+def point(p):
+    return np.array([p[0], p[1], 1.]).reshape(1, -1)
+
+
+def collinearity_check(p1, p2, p3, epsilon=1e-6):
+    m = np.concatenate((p1, p2, p3), 0)
+    det = np.linalg.det(m)
+    return abs(det) < epsilon
+
+
+def prune_path(actual_path):
+    pruned_path = [p for p in actual_path]
+    i = 0
+    while i < len(pruned_path) - 2:
+        p1 = point(pruned_path[i])
+        p2 = point(pruned_path[i + 1])
+        p3 = point(pruned_path[i + 2])
+
+        if collinearity_check(p1, p2, p3):
+
+            pruned_path.remove(pruned_path[i + 1])
+        else:
+            i += 1
+    return pruned_path
+Para este punto vamos a usar el algoritmo de colinearidad para de esta forma eliminar los puntos intermedios que son inecesarios recorrer , primero validaremos que cada tres puntos no sean colineales con un marger de error epsilon, luego si los tres puntos so colineales se elimina el de enmedio P2. 
+Usaremos esta funcion para agregarla a prune_path(actual_path) y de esta forma analizar el waypoint y eliminar los puntos inecesarios y de esta forma devolver el waypoint optimizado.
 
 
 ## Execute the flight
