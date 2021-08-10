@@ -2,7 +2,9 @@
 ![Quad Image](./misc/enroute.png)
 
 ---
-
+Este proyecto está basado en el repositorio de [FCND-Motion-Planning](https://github.com/udacity/FCND-Motion-Planning)
+Documentación de la que nos basamos para utilizar las funciones ya establecidas: [Udacidron](https://github.com/udacity/udacidrone)
+---
 
 # Required Steps for a Passing Submission:
 1. Load the 2.5D map in the colliders.csv file describing the environment.
